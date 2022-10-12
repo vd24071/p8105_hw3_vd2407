@@ -1,0 +1,28 @@
+---
+title: "Homework 3"
+author: "Vanessa Dinh"
+date: "10/12/22"
+---
+
+## Load tidyverse
+
+```{r}
+library(tidyverse)
+
+```
+
+## Problem 1
+
+```{r}
+library(p8105.datasets)
+data("instacart")
+```
+
+## Problem 2
+
+```{r}
+accel = 
+  read_csv("./data/accel_data.csv") %>% 
+  janitor::clean_names()
+```
+
