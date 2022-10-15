@@ -391,7 +391,38 @@ data(&quot;instacart&quot;)</code></pre>
 <h2>Problem 2</h2>
 <pre class="r"><code>accel = 
   read_csv(&quot;./data/accel_data.csv&quot;) %&gt;% 
-  janitor::clean_names()</code></pre>
+  janitor::clean_names() %&gt;% 
+  mutate(
+    day_type = ifelse(
+      day == &quot;Saturday&quot; | day == &quot;Sunday&quot;,
+      &quot;Weekend&quot;, &quot;Weekday&quot;),
+    week = as.integer(week),
+    day_id = as.integer(day_id)) %&gt;% 
+  mutate_if(is.double, as.numeric) %&gt;% 
+  select(week, day_id, day, day_type, activity_1:activity_1440)</code></pre>
+<pre><code>## Rows: 35 Columns: 1443
+## ── Column specification ────────────────────────────────────────────────────────
+## Delimiter: &quot;,&quot;
+## chr    (1): day
+## dbl (1442): week, day_id, activity.1, activity.2, activity.3, activity.4, ac...
+## 
+## ℹ Use `spec()` to retrieve the full column specification for this data.
+## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
+<pre class="r"><code># In the accel dataset, there are 2 integer variables: week and day_id, 2 character variables: day and day_type, and the 1440 activity levels by minute (activity_) are numeric.
+# There are 35 observations and 1444 variables.</code></pre>
+<pre class="r"><code>accel = 
+  read_csv(&quot;./data/accel_data.csv&quot;) %&gt;% 
+  janitor::clean_names() %&gt;% 
+  mutate(
+    day_type = ifelse(
+      day == &quot;Saturday&quot; | day == &quot;Sunday&quot;,
+      &quot;Weekend&quot;, &quot;Weekday&quot;),
+    week = as.integer(week),
+    day_id = as.integer(day_id)) %&gt;% 
+  mutate_if(is.double, as.numeric) %&gt;%  
+  mutate(total_activity =
+           rowSums(across(c(activity_1:activity_1440)))) %&gt;% 
+  select(week, day_id, day, day_type, total_activity, activity_1:activity_1440)</code></pre>
 <pre><code>## Rows: 35 Columns: 1443
 ## ── Column specification ────────────────────────────────────────────────────────
 ## Delimiter: &quot;,&quot;

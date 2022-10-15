@@ -23,6 +23,36 @@ data("instacart")
 ```{r}
 accel = 
   read_csv("./data/accel_data.csv") %>% 
-  janitor::clean_names()
+  janitor::clean_names() %>% 
+  mutate(
+    day_type = ifelse(
+      day == "Saturday" | day == "Sunday",
+      "Weekend", "Weekday"),
+    week = as.integer(week),
+    day_id = as.integer(day_id)) %>% 
+  mutate_if(is.double, as.numeric) %>% 
+  select(week, day_id, day, day_type, activity_1:activity_1440)
+
+# In the accel dataset, there are 2 integer variables: week and day_id, 2 character variables: day and day_type, and the 1440 activity levels by minute (activity_) are numeric.
+# There are 35 observations and 1444 variables.
+  
+```
+
+```{r}
+accel = 
+  read_csv("./data/accel_data.csv") %>% 
+  janitor::clean_names() %>% 
+  mutate(
+    day_type = ifelse(
+      day == "Saturday" | day == "Sunday",
+      "Weekend", "Weekday"),
+    week = as.integer(week),
+    day_id = as.integer(day_id)) %>% 
+  mutate_if(is.double, as.numeric) %>%  
+  mutate(total_activity =
+           rowSums(across(c(activity_1:activity_1440)))) %>% 
+  select(week, day_id, day, day_type, total_activity, activity_1:activity_1440)
+
+
 ```
 
