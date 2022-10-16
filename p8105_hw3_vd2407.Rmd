@@ -77,3 +77,38 @@ accel_plot
 
 # There's less activity between 0 and about 300 minutes. There are spikes of activity at different points of the day, particularly on Friday at around 1200-1300 minutes.
 ```
+
+## Problem 3
+
+```{r}
+library(p8105.datasets)
+data("ny_noaa")
+
+ny_noaa
+```
+
+```{r}
+ny_noaa_tidy = ny_noaa %>% 
+  separate(
+    date,
+    into = c("year", "month", "day"),
+    sep = '-') %>% 
+  mutate(
+    year = as.integer(year),
+    month = factor(month, levels = month.abb, labels = month.name),
+    month = as.character(month),
+    day = as.integer(day),
+    prcp = as.numeric(prcp),
+    snow = as.numeric(snow),
+    snwd = as.numeric(snwd),
+    tmax = as.numeric(tmax),
+    tmin = as.numeric(tmin),
+    prcp = prcp/10,
+    tmax= tmax/10,
+    tmin = tmin/10
+  )
+
+ny_noaa_tidy
+```
+
+
