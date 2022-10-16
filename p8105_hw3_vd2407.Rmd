@@ -24,35 +24,56 @@ data("instacart")
 accel = 
   read_csv("./data/accel_data.csv") %>% 
   janitor::clean_names() %>% 
+  pivot_longer(
+    activity_1:activity_1440,
+    names_to = "minute",
+    names_prefix = "activity_",
+    values_to = "activity_level"
+  ) %>% 
   mutate(
     day_type = ifelse(
       day == "Saturday" | day == "Sunday",
       "Weekend", "Weekday"),
     week = as.integer(week),
-    day_id = as.integer(day_id)) %>% 
-  mutate_if(is.double, as.numeric) %>% 
-  select(week, day_id, day, day_type, activity_1:activity_1440)
+    day_id = as.integer(day_id),
+    day = factor(day, levels = c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")),
+    day_type = as.factor(day_type),
+    minute = as.integer(minute),
+    activity_level = as.numeric(activity_level))
 
-# In the accel dataset, there are 2 integer variables: week and day_id, 2 character variables: day and day_type, and the 1440 activity levels by minute (activity_) are numeric.
-# There are 35 observations and 1444 variables.
+accel
+str(accel)
+
+# In the accel dataset, there are 3 integer variables: week, day_id, and minute. There are 2 factor variables: day and day_type (weekend/weekday variable), and activity level variable is numeric.
+# There are 50,400 observations and 6 variables.
   
 ```
 
 ```{r}
-accel = 
-  read_csv("./data/accel_data.csv") %>% 
-  janitor::clean_names() %>% 
-  mutate(
-    day_type = ifelse(
-      day == "Saturday" | day == "Sunday",
-      "Weekend", "Weekday"),
-    week = as.integer(week),
-    day_id = as.integer(day_id)) %>% 
-  mutate_if(is.double, as.numeric) %>%  
-  mutate(total_activity =
-           rowSums(across(c(activity_1:activity_1440)))) %>% 
-  select(week, day_id, day, day_type, total_activity, activity_1:activity_1440)
+summary_accel = accel %>%  
+  group_by(day) %>% 
+  summarize(across(c(activity_level), ~ sum(., is.na(.), 0)))
 
-
+# There is less activity on Saturdays.
 ```
 
+```{r}
+accel_plot = accel %>% 
+  mutate(minute = as.numeric(minute)) %>% 
+  ggplot(aes(x = minute, y = activity_level, color = day)) +
+   geom_line(alpha = .7) +
+  labs(
+    title = "Daily Activity by Minute",
+    x = "Minute of the Day",
+    y = "Activity Level"
+  ) +
+  scale_x_continuous(
+    breaks = c(0, 250, 500, 750, 1000, 1250, 1500), 
+    labels = c("0", "250", "500", "750", "1000", "1250", "1500"))+
+  guides(color = guide_legend(title = "Day of the Week")) 
+  
+  
+accel_plot
+
+# There's less activity between 0 and about 300 minutes. There are spikes of activity at different points of the day, particularly on Friday at around 1200-1300 minutes.
+```
