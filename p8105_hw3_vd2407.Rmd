@@ -89,14 +89,17 @@ ny_noaa
 
 ```{r}
 ny_noaa_tidy = ny_noaa %>% 
+  janitor::clean_names() %>% 
   separate(
     date,
     into = c("year", "month", "day"),
     sep = '-') %>% 
   mutate(
-    year = as.integer(year),
-    month = factor(month, levels = month.abb, labels = month.name),
-    month = as.character(month),
+    year = as.factor(year),
+    month = as.integer(month),
+    month = month.name[month],
+    month = as.factor(month),
+    station = as.factor(id),
     day = as.integer(day),
     prcp = as.numeric(prcp),
     snow = as.numeric(snow),
@@ -106,9 +109,43 @@ ny_noaa_tidy = ny_noaa %>%
     prcp = prcp/10,
     tmax= tmax/10,
     tmin = tmin/10
-  )
+  ) 
 
-ny_noaa_tidy
+str(ny_noaa_tidy)
+
+mode = function(v){
+  uniqv = unique(v[!is.na(v)])
+  uniqv[which.max(table(match(v, uniqv)))]
+}
+
+ny_noaa_snow = ny_noaa_tidy %>% 
+  group_by(month) %>% 
+  summarize(snow_mode = mode(snow))
+
+# 0 is the most commonly observed value since snowfall is limited to less than half the year in the winter/late fall in New York.
 ```
+
+```{r}
+ny_noaa_plot = ny_noaa_tidy %>% 
+  group_by(station, year, month) %>% 
+  summarize(mean_tmax = mean(tmax, na.rm = TRUE))
+
+jan_ggplot = subset(ny_noaa_plot, month == "January") %>% 
+  ggplot(aes(x = year, y = mean_tmax, color = station)) +
+  geom_point() +
+  theme(legend.position = "none") +
+  labs(
+    title = "Average Maximum Temperature in January by Year and Weather Station in NY",
+    x = "Year",
+    y = "Average Maximum Temperature in Celsius"
+  ) +
+  scale_y_continuous(
+    breaks = c(-15, -10, -5, 0, 5, 10), 
+    labels = c("-15 C", "-10 C", "-5 C", "0 C", "5 C", "10 C"))
+
+jan_ggplot
+
+```
+
 
 
