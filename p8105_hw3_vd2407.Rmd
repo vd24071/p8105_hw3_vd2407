@@ -88,7 +88,8 @@ ny_noaa
 ```
 
 ```{r}
-ny_noaa_tidy = ny_noaa %>% 
+ny_noaa_tidy = 
+  ny_noaa %>% 
   janitor::clean_names() %>% 
   separate(
     date,
@@ -126,13 +127,18 @@ ny_noaa_snow = ny_noaa_tidy %>%
 ```
 
 ```{r}
-ny_noaa_plot = ny_noaa_tidy %>% 
+ny_noaa_plot = 
+  ny_noaa_tidy %>% 
   group_by(station, year, month) %>% 
   summarize(mean_tmax = mean(tmax, na.rm = TRUE))
 
+```
+
+```{r}
+
 jan_ggplot = subset(ny_noaa_plot, month == "January") %>% 
-  ggplot(aes(x = year, y = mean_tmax, color = station)) +
-  geom_point() +
+  ggplot(aes(x = year, y = mean_tmax, group = station, color = station)) +
+  geom_line() +
   theme(legend.position = "none") +
   labs(
     title = "Average Maximum Temperature in January by Year and Weather Station in NY",
@@ -141,10 +147,41 @@ jan_ggplot = subset(ny_noaa_plot, month == "January") %>%
   ) +
   scale_y_continuous(
     breaks = c(-15, -10, -5, 0, 5, 10), 
-    labels = c("-15 C", "-10 C", "-5 C", "0 C", "5 C", "10 C"))
+    labels = c("-15 C", "-10 C", "-5 C", "0 C", "5 C", "10 C")) +
+  viridis::scale_color_viridis(
+    name = "station", 
+    discrete = TRUE
+  )
 
 jan_ggplot
 
+```
+
+```{r}
+july_ggplot = subset(ny_noaa_plot, month == "July") %>% 
+  ggplot(aes(x = year, y = mean_tmax, group = station, color = station)) +
+  geom_line() +
+  theme(legend.position = "none") +
+  labs(
+    title = "Average Maximum Temperature in July by Year and Weather Station in NY",
+    x = "Year",
+    y = "Average Maximum Temperature in Celsius"
+  ) +
+  scale_y_continuous(
+    breaks = c(10, 15, 20, 25, 30, 35, 40), 
+    labels = c("10 C", "15 C", "20 C", "25 C", "30 C", "35 C", "40 C")) +
+  viridis::scale_color_viridis(
+    name = "station", 
+    discrete = TRUE,
+    option = "B"
+  )
+
+july_ggplot
+
+```
+```{r}
+library(patchwork)
+july_ggplot / jan_ggplot
 ```
 
 
