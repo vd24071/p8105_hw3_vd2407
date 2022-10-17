@@ -8,7 +8,6 @@ date: "10/12/22"
 
 ```{r}
 library(tidyverse)
-
 ```
 
 ## Problem 1
@@ -51,13 +50,19 @@ str(accel)
 
 ```{r}
 summary_accel = accel %>%  
-  group_by(day) %>% 
-  summarize(across(c(activity_level), ~ sum(., is.na(.), 0)))
+  group_by(week, day) %>% 
+  summarize(total_activity = sum(activity_level)) %>% 
+  pivot_wider(
+    names_from = day,
+    values_from = total_activity
+  )
 
-# There is less activity on Saturdays.
+summary_accel
+
+# There is less activity on Saturdays. Mondays, Fridays, Saturdays, and Sundays have variable activity while Tuesdays, Wednesdays, and Thursdays have similar total activity levels.
 ```
 
-```{r}
+```{r fig.align = 'center'}
 accel_plot = accel %>% 
   mutate(minute = as.numeric(minute)) %>% 
   ggplot(aes(x = minute, y = activity_level, color = day)) +
@@ -110,7 +115,8 @@ ny_noaa_tidy =
     prcp = prcp/10,
     tmax= tmax/10,
     tmin = tmin/10
-  ) 
+  ) %>% 
+  select(-id)
 
 str(ny_noaa_tidy)
 
@@ -134,55 +140,68 @@ ny_noaa_plot =
 
 ```
 
-```{r}
-
-jan_ggplot = subset(ny_noaa_plot, month == "January") %>% 
+```{r fig.align = 'center', fig.height = 8}
+jan_july_plot =
+  ny_noaa_plot %>% 
+  filter(month == "January" | month == "July") %>% 
   ggplot(aes(x = year, y = mean_tmax, group = station, color = station)) +
   geom_line() +
+  facet_wrap(~ month, ncol = 1) +
   theme(legend.position = "none") +
   labs(
-    title = "Average Maximum Temperature in January by Year and Weather Station in NY",
+    title = "Average Maximum Temperature in January and July by Year and NY Weather Station",
     x = "Year",
     y = "Average Maximum Temperature in Celsius"
   ) +
-  scale_y_continuous(
-    breaks = c(-15, -10, -5, 0, 5, 10), 
-    labels = c("-15 C", "-10 C", "-5 C", "0 C", "5 C", "10 C")) +
   viridis::scale_color_viridis(
     name = "station", 
     discrete = TRUE
-  )
-
-jan_ggplot
-
-```
-
-```{r}
-july_ggplot = subset(ny_noaa_plot, month == "July") %>% 
-  ggplot(aes(x = year, y = mean_tmax, group = station, color = station)) +
-  geom_line() +
-  theme(legend.position = "none") +
-  labs(
-    title = "Average Maximum Temperature in July by Year and Weather Station in NY",
-    x = "Year",
-    y = "Average Maximum Temperature in Celsius"
   ) +
-  scale_y_continuous(
-    breaks = c(10, 15, 20, 25, 30, 35, 40), 
-    labels = c("10 C", "15 C", "20 C", "25 C", "30 C", "35 C", "40 C")) +
-  viridis::scale_color_viridis(
-    name = "station", 
-    discrete = TRUE,
-    option = "B"
-  )
+  scale_x_discrete(guide = guide_axis(angle = 45))
 
-july_ggplot
+jan_july_plot
 
+# Max temperatures in July are on average around 25 degrees Celsius higher than max temperatures in January. The max temperature seems to oscillate year to year, though it seems to become less variable between stations in the years 2000-2010.
 ```
+
 ```{r}
 library(patchwork)
-july_ggplot / jan_ggplot
 ```
 
+```{r}
+tmax_tmin_ggplot = 
+  ny_noaa_tidy %>% 
+  ggplot(aes(x = tmin, y = tmax)) +
+  geom_hex() +
+  labs(
+    title = "Minimum vs Maximum Temperature in Celsius in NY",
+    x = "Minimum Temperature (Celsius)",
+    y = "Maximum Temperature (Celsius)"
+  ) +
+  scale_y_continuous(
+    breaks = c(-40, -20, 0, 20, 40, 60), 
+    labels = c("-40 C", "-20 C", "0 C", "20 C", "40 C", "60 C")) +
+  scale_x_continuous(
+    breaks = c(-60, -40, -20, 0, 20, 40, 60), 
+    labels = c("-60 C", "-40 C", "-20 C", "0 C", "20 C", "40 C", "60 C"))
+  
+```
 
+```{r}
+snowfall_plot = 
+  ny_noaa_tidy %>% 
+  filter(snow > 0 & snow < 100) %>% 
+  ggplot(aes(x = snow, group = year, color = year)) +
+  geom_density(alpha = 0.5) +
+  labs(
+    title = "Snowfall Distribution by Year",
+    x = "Snowfall (mm)",
+    y = "Density"
+  )
+
+```
+
+```{r fig.align = 'center', fig.height = 8}
+tmax_tmin_ggplot / snowfall_plot
+```
 
